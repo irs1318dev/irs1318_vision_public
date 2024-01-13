@@ -1,0 +1,53 @@
+To download OpenCV releases:
+https://github.com/opencv/opencv/releases
+
+Before you can build and run, you must first set a few environment variables based on your OpenCV installation location and irs1318_apriltag build:
+1. Named OPENCV_JAR which is the absolute path to the opencv-460.jar file.
+2. Named OPENCV_JNI_LIB which is the absolute path of the directory where the corresponding opencv_460 library is located.
+3. Named APRILTAG_JAR which is the absolute path to the irs1318_apriltag-1.0.jar file (built/installed from irs1318_apriltag repository).
+4. Named APRILTAG_JNI_LIB which is the absolute path of the directory where the irs1318_apriltag_native library is located (built/installed from irs1318_apriltag repository).
+
+For me, this is:
+Windows:	C:\opencv\build\java\opencv-460.jar, C:\opencv\build\java\x64\, C:\Users\wm_ra\git\irs1318_apriltag\managed\build\libs\irs1318_apriltag-1.0.jar, and C:\Users\wm_ra\git\irs1318_apriltag\native\out\install\x64-Release\lib
+Linux:		/usr/local/share/java/opencv4/opencv-460.jar, /usr/local/share/java/opencv4/, /home/irs/irs1318_apriltag/managed/build/libs/irs1318_apriltag-1.0.jar, and /usr/local/lib/
+
+On Windows you can set the environment variable using Control Panel->System->Advanced->Environment Variables.
+On Linux, add the key-value pair (KEY=VALUE) to /etc/environment.  You can also run "export OPENCV_JAR=..." for temporary variables.
+After adding environment variables, you need to reboot.
+
+Once I have built the jar on the local machine, I can run it by running the following:
+If using AprilTags:
+Windows:	java -jar -Djava.library.path=%OPENCV_JNI_LIB%;%APRILTAG_JNI_LIB% build\libs\irs1318_vision-1.0.jar
+Linux:		java -jar -Djava.library.path=$OPENCV_JNI_LIB:$APRILTAG_JNI_LIB build/libs/irs1318_vision-1.0.jar
+Otherwise:
+Windows:	java -jar -Djava.library.path=%OPENCV_JNI_LIB%; build\libs\irs1318_vision-1.0.jar
+Linux:		java -jar -Djava.library.path=$OPENCV_JNI_LIB build/libs/irs1318_vision-1.0.jar
+
+powershell:
+ls "C:\Users\wm_ra\Documents\Robotics\2022\images\" | ?{ $_.PSIsContainer } | %{
+ . "C:\Program Files\Java\jdk-11\bin\java.exe" -jar -D"java.library.path=$($env:OPENCV_JNI_LIB);$($env:APRILTAG_JNI_LIB)" build\libs\irs1318_vision-1.0.jar $($_.FullName)
+}
+
+Once it can run on Linux, you can set it up to run as a service.  To do so:
+1. Copy irs1318vision.service to /etc/systemd/system/irs1318vision.service
+2. Run: sudo systemctl daemon-reload 
+3. Run: sudo systemctl start irs1318vision.service
+4. Run: sudo systemctl enable irs1318vision.service
+
+After rebuilding, stop and restart the SystemD service:
+1. Run: sudo systemctl stop irs1318vision.service
+2. Run: sudo systemctl start irs1318vision.service
+
+You can run the following to check a service's status:				sudo systemctl status irs1318vision.service
+You can run the following to read a service's output to stdout and stderr:	sudo journalctl -u irs1318vision
+
+Note: The coprocessor should be configured to use a static IP address at 10.13.18.11. On some Linux machines this looks like the below in /etc/dhcpcd.conf :
+interface eth0
+static ip_address=10.13.18.11/24
+#static ip6_address=fd51:42f8:caae:d92e::ff/64
+static routers=10.13.18.1
+static domain_name_servers=10.13.18.1
+
+USB devices:
+/dev/sda1: UUID="68D6-F0DA" TYPE="exfat"
+/dev/sda1: UUID="3C35-E9A4" TYPE="exfat"

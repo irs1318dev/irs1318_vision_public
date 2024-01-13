@@ -1,0 +1,17 @@
+[Unit]
+Description=Issaquah Robotics Society (FRC 1318) Vision System
+After=network.target syslog.target
+
+[Service]
+User=root
+# Run at "nice" -10, which is higher priority than standard
+Nice=-10
+# for non-uniform CPUs, like big.LITTLE, you want to select the big cores
+# For OrangePI5 this is 4-7.
+#AllowedCPUs=4-7
+ExecStart=/usr/bin/java -Djava.library.path=/usr/local/share/java/opencv4/:/usr/local/lib/ -jar /home/irs/irs1318_vision/build/libs/irs1318_vision-1.0.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

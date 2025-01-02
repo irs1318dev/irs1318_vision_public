@@ -19,6 +19,7 @@ public class NetworkTableController implements IController
     private BooleanSubscriber streamEnabledEntry;
     private IntegerSubscriber processingModeEntry;
     private StringSubscriber desiredTargetEntry;
+    private IntegerSubscriber ledModeEntry;
 
     private String lastDesiredTargetString;
     private List<Integer> lastDesiredTarget;
@@ -35,6 +36,7 @@ public class NetworkTableController implements IController
         this.streamEnabledEntry = table.getBooleanTopic("vision/enableStream").subscribe(false);
         this.processingModeEntry = table.getIntegerTopic("vision/processingMode").subscribe(0);
         this.desiredTargetEntry = table.getStringTopic("vision/desiredTarget").subscribe(null);
+        this.ledModeEntry = table.getIntegerTopic("vision/ledMode").subscribe(0);
         return true;
     }
 
@@ -112,5 +114,11 @@ public class NetworkTableController implements IController
         this.lastDesiredTargetString = desiredTargetString;
         this.lastDesiredTarget = desiredTarget;
         return desiredTarget;
+    }
+
+    @Override
+    public int getLedMode()
+    {
+        return (int)this.ledModeEntry.get();
     }
 }

@@ -27,4 +27,10 @@ public interface IController extends IOpenable
      * @return April Tag ID of Desired April Tag
      */
     public List<Integer> getDesiredTarget();
+
+    /**
+     * Gets the desired LED mode
+     * @return LED Mode selected
+     */
+    public int getLedMode();
 }

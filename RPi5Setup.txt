@@ -205,3 +205,19 @@ chmod 755 gradlew
 
 ##### Try to run vision system:
 java -jar -Djava.library.path=$OPENCV_JNI_LIB:$APRILTAG_JNI_LIB:$APRILTAG_LIB build/libs/irs1318_vision-1.0.jar /?
+
+#### If running LEDs using PIOLib, also follow these steps:
+# Run
+ls -l /dev/pio0
+
+# If reports that the file is not found, you may need to update your Pi 5 firmware to one with PIO support and make sure that you are running a suitably recent kernel.
+# If it reports that the file is owned by root and group root, you should run:
+sudo nano /etc/udev/rules.d/99-com.rules
+
+# And add an entry like:
+SUBSYSTEM=="*-pio", GROUP="gpio", MODE="0660"
+
+# then,
+sudo reboot
+# or run
+sudo udevadm control --reload-rules && sudo udevadm trigger

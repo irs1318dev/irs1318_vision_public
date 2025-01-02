@@ -14,14 +14,12 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.*;
 import org.opencv.videoio.*;
 
-import frc1318.apriltag.AprilTag;
 import frc1318.apriltag.AprilTagDetection;
 import frc1318.vision.calculator.*;
 import frc1318.vision.controller.*;
 import frc1318.vision.filters.*;
-import frc1318.vision.helpers.HSVFilter;
-import frc1318.vision.helpers.ImageUndistorter;
-import frc1318.vision.helpers.Pair;
+import frc1318.vision.helpers.*;
+import frc1318.vision.leds.*;
 import frc1318.vision.pipeline.*;
 import frc1318.vision.reader.*;
 import frc1318.vision.writer.*;
@@ -89,6 +87,7 @@ public class Program
         String sourceFileName = null;
         String targetFileName = null;
         String maskFileName = null;
+        boolean leds = false;
         boolean grayscaleCamera = false;
         boolean useLibCamera = false;
         boolean diagnostic = false;
@@ -106,6 +105,19 @@ public class Program
             {
                 printUsage();
                 return;
+            }
+
+            if (arg.equalsIgnoreCase("/leds"))
+            {
+                if (leds)
+                {
+                    System.err.println("Error: multiple /leds arguments");
+                    printUsage();
+                    return;
+                }
+
+                leds = true;
+                continue;
             }
 
             if (arg.startsWith("/c:"))
@@ -415,7 +427,14 @@ public class Program
 
                 if (diagnostic)
                 {
-                    System.err.println("Error: /diagnostic not supported for HSV mode");
+                    System.err.println("Error: /diagnostic not supported for imageSaver mode");
+                    printUsage();
+                    return;
+                }
+
+                if (leds)
+                {
+                    System.err.println("Error: /leds not supported for imageSaver mode");
                     printUsage();
                     return;
                 }
@@ -428,7 +447,7 @@ public class Program
                 break;
 
             case DeviceEnumeration:
-                if (cameraId != null || sourceFileName != null || maskFileName != null || diagnostic || show || ((targetFileName == null) == !useLibCamera))
+                if (cameraId != null || sourceFileName != null || maskFileName != null || diagnostic || show || ((targetFileName == null) == !useLibCamera) || leds)
                 {
                     System.err.println("Error: /deviceEnueration requires /t:directory OR /libcamera and no other parameter");
                     printUsage();
@@ -452,6 +471,13 @@ public class Program
                     return;
                 }
 
+                if (leds)
+                {
+                    System.err.println("Error: /calibrate doesn't support /leds");
+                    printUsage();
+                    return;
+                }
+
                 break;
 
             case GetControls:
@@ -469,7 +495,7 @@ public class Program
                     return;
                 }
 
-                if (sourceFileName != null || maskFileName != null || diagnostic || show || targetFileName != null)
+                if (sourceFileName != null || maskFileName != null || diagnostic || show || targetFileName != null || leds)
                 {
                     System.err.println("Error: /controls doesn't support most other parameters");
                     printUsage();
@@ -584,9 +610,9 @@ public class Program
                 frameReader = new LocalImageFileReader(sourceFileName);
             }
         }
-        else
+        else if (!leds)
         {
-            System.err.println("Error: unknown image source");
+            System.err.println("Error: unknown image source, and not in LEDs mode");
             printUsage();
             return;
         }
@@ -633,7 +659,8 @@ public class Program
         }
 
         IResultWriter<Point> pointWriter = null;
-        if (selectedMode != Mode.Calibrate)
+        if (selectedMode != Mode.Calibrate &&
+            selectedMode != Mode.None)
         {
             if (targetFileName != null)
             {
@@ -663,7 +690,7 @@ public class Program
         }
 
         ImageUndistorter undistorter = null;
-        if (!skipUndistort)
+        if (selectedMode != Mode.None && !skipUndistort)
         {
             undistorter = new ImageUndistorter(
                 sb2 ? VisionConstants.SB2_CAMERA_RESOLUTION_X : VisionConstants.ELP_GS_COLOR_110DEG_CAMERA_RESOLUTION_X_720P,
@@ -840,13 +867,13 @@ public class Program
             outputs.add(pointWriter);
         }
 
-        if (outputs.size() == 0 || framePipelines.size() == 0)
+        if (selectedMode != Mode.None && (outputs.size() == 0 || framePipelines.size() == 0))
         {
             System.err.println(String.format("unknown mode '%s'!", selectedMode.toString()));
             return;
         }
 
-        if (!frameReader.open())
+        if (selectedMode != Mode.None && !frameReader.open())
         {
             System.err.println(String.format("unable to open frame reader '%s'!", cameraId));
             System.exit(1);
@@ -854,7 +881,7 @@ public class Program
 
         CameraSettings primarySettings = null;
         CameraSettings secondarySettings = null;
-        if (!skipApplyingSettings)
+        if (selectedMode != Mode.None && !skipApplyingSettings)
         {
             primarySettings =
                 new CameraSettings(
@@ -900,7 +927,7 @@ public class Program
             System.exit(1);
         }
 
-        VisionSystemBase visionSystem;
+        VisionSystemBase visionSystem = null;
         if (selectedMode == Mode.Switched)
         {
             visionSystem =
@@ -915,7 +942,7 @@ public class Program
                     VisionConstants.PRIMARY_CAMERA_RESOLUTION_X,
                     VisionConstants.PRIMARY_CAMERA_RESOLUTION_Y);
         }
-        else
+        else if (selectedMode != Mode.None)
         {
             visionSystem =
                 new SimpleVisionSystem(
@@ -927,7 +954,7 @@ public class Program
                     VisionConstants.PRIMARY_CAMERA_RESOLUTION_Y);
         }
 
-        if (!visionSystem.open())
+        if (selectedMode != Mode.None && !visionSystem.open())
         {
             System.err.println("unable to open vision system!");
             if (frameReader instanceof IRunnableFrameReader)
@@ -946,8 +973,27 @@ public class Program
             cameraThread.start();
         }
 
-        Thread visionThread = new Thread(visionSystem);
-        visionThread.start();
+        Thread visionThread = null;
+        if (visionSystem != null)
+        {
+            visionThread = new Thread(visionSystem);
+            visionThread.start();
+        }
+
+        LEDStripManager ledManager = null;
+        Thread ledThread = null;
+        if (leds)
+        {
+            ledManager = new LEDStripManager(controller, 60, new UILedStrip(60));
+            if (!ledManager.open())
+            {
+                ledManager.close();
+                ledManager = null;
+            }
+
+            ledThread = new Thread(ledManager);
+            ledThread.start();
+        }
 
         controller.run();
 
@@ -956,10 +1002,22 @@ public class Program
             ((IRunnableFrameReader)frameReader).stop();
         }
 
-        visionSystem.stop();
-        visionSystem.close();
+        if (visionSystem != null)
+        {
+            visionSystem.stop();
+            visionSystem.close();
+        }
 
-        frameReader.close();
+        if (ledManager != null)
+        {
+            ledManager.stop();
+        }
+
+        if (frameReader != null)
+        {
+            frameReader.close();
+        }
+
         controller.close();
         for (IResultWriter<?> output : outputs)
         {
@@ -971,12 +1029,28 @@ public class Program
             pointWriter.close();
         }
 
+        try
+        {
+            Thread.sleep(20);
+        }
+        catch (InterruptedException ex)
+        {
+        }
+
         if (cameraThread != null)
         {
             cameraThread.interrupt();
         }
 
-        visionThread.interrupt();
+        if (visionThread != null)
+        {
+            visionThread.interrupt();
+        }
+
+        if (ledThread != null)
+        {
+            ledThread.interrupt();
+        }
     }
 
     private static void libcameraEnumeration()
@@ -1020,21 +1094,28 @@ public class Program
     {
         System.out.println("Usage:");
         System.out.println("VisionSystem.jar                                                       -- run full primary vision system pipelines");
-        System.out.println("VisionSystem.jar [/hsv] /s:file [/t:directory] [/show] [/mask]         -- test hsv filtering for that file, outputting result to console (or directory)");
-        System.out.println("VisionSystem.jar [/hsv] /s:directory [/t:directory] [/show] [/mask]    -- test hsv filtering for files in that directory, outputting results to console (or directory)");
-        System.out.println("VisionSystem.jar [/hsv] /c:camera [/t:directory] [/show] [/mask]       -- test hsv filtering using the provided camera, outputting results to console (or directory)");
-        System.out.println("VisionSystem.jar /switched /c:camera [/t:directory] [/diagnostic] [/show] [/gray] [/mask] [/libcamera]   -- test switched camera functionality for both apriltag filtering and hsv filtering using the provided camera, results to console (or directory)");
-        System.out.println("VisionSystem.jar /absolute /c:camera [/t:directory] [/gray] [/mask]            -- test absolute position detection from apriltags using the provided camera, results to console (or directory)");
-        System.out.println("VisionSystem.jar /absolute /s:file [/t:directory] [/gray] [/mask]              -- test absolute position detection from apriltags for that file, outputting result to console (or directory)");
-        System.out.println("VisionSystem.jar /absolute /s:directory [/t:directory] [/gray] [/mask]         -- test absolute position detection from apriltags for files in that directory, outputting results to console (or directory)");
-        System.out.println("VisionSystem.jar /apriltag /c:camera [/t:directory] [/diagnostic] [/show] [/gray] [/mask] [/libcamera]   -- test apriltag detection using the provided camera, results to console (or directory)");
-        System.out.println("VisionSystem.jar /apriltag /s:file [/t:directory] [/diagnostic] [/show] [/gray] [/mask]      -- test apriltag detection for that file, outputting result to console (or directory)");
-        System.out.println("VisionSystem.jar /apriltag /s:directory [/t:directory] [/diagnostic] [/show] [/gray] [/mask] -- test apriltag detection for files in that directory, outputting results to console (or directory)");
-        System.out.println("VisionSystem.jar /calibrate /c:camera [/t:directory] [/show] [/libcamera]            -- calibrate camera based on the provided camera");
-        System.out.println("VisionSystem.jar /calibrate /s:directory [/t:directory] [/show]        -- calibrate camera based on the provided images");
-        System.out.println("VisionSystem.jar /deviceEnumeration [/t:directory] [/libcamera]        -- run device enumeration");
-        System.out.println("VisionSystem.jar /imagesaver /c:camera /t:directory [/libcamera]       -- save images from webcam to the provided directory");
+        System.out.println("VisionSystem.jar [/hsv] /s:file         -- test hsv filtering for that file, outputting result to console (or directory)");
+        System.out.println("VisionSystem.jar [/hsv] /s:directory    -- test hsv filtering for files in that directory, outputting results to console (or directory)");
+        System.out.println("VisionSystem.jar [/hsv] /c:camera       -- test hsv filtering using the provided camera, outputting results to console (or directory)");
+        System.out.println("VisionSystem.jar /switched /c:camera [/diagnostic] [/gray]   -- test switched camera functionality for both apriltag filtering and hsv filtering using the provided camera, results to console (or directory)");
+        System.out.println("VisionSystem.jar /absolute /c:camera [/gray]            -- test absolute position detection from apriltags using the provided camera, results to console (or directory)");
+        System.out.println("VisionSystem.jar /absolute /s:file [/gray]              -- test absolute position detection from apriltags for that file, outputting result to console (or directory)");
+        System.out.println("VisionSystem.jar /absolute /s:directory [/gray]         -- test absolute position detection from apriltags for files in that directory, outputting results to console (or directory)");
+        System.out.println("VisionSystem.jar /apriltag /c:camera [/diagnostic] [/gray]   -- test apriltag detection using the provided camera, results to console (or directory)");
+        System.out.println("VisionSystem.jar /apriltag /s:file [/diagnostic] [/gray]      -- test apriltag detection for that file, outputting result to console (or directory)");
+        System.out.println("VisionSystem.jar /apriltag /s:directory [/diagnostic] [/gray] -- test apriltag detection for files in that directory, outputting results to console (or directory)");
+        System.out.println("VisionSystem.jar /calibrate /c:camera            -- calibrate camera based on the provided camera");
+        System.out.println("VisionSystem.jar /calibrate /s:directory        -- calibrate camera based on the provided images");
+        System.out.println("VisionSystem.jar /deviceEnumeration        -- run device enumeration");
+        System.out.println("VisionSystem.jar /imagesaver /c:camera /t:directory       -- save images from webcam to the provided directory");
         System.out.println("VisionSystem.jar /libcamera /c:camera /controls                        -- shows supported camera controls from libcamera");
+        System.out.println("Other common parameters:");
+        System.out.println("[/leds]         -- control LEDs");
+        System.out.println("[/libcamera]    -- use Libcamera library for interacting with a camera");
+        System.out.println("[/t:directory]  -- save output images to a directory");
+        System.out.println("[/show]         -- attempt to display output images");
+        System.out.println("[/mask]         -- ignore certain areas of input image");
+
     }
 
     private static void runVisionSystem()

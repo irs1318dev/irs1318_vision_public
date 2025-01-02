@@ -9,15 +9,17 @@ import frc1318.vision.Logger;
 public class ConsoleController implements IController
 {
     private int mode;
+    private int ledMode;
 
     public ConsoleController()
     {
-        this(1);
+        this(1, 0);
     }
 
-    public ConsoleController(int initialMode)
+    public ConsoleController(int initialMode, int initialLEDMode)
     {
         this.mode = initialMode;
+        this.ledMode = initialLEDMode;
     }
 
     @Override
@@ -55,6 +57,12 @@ public class ConsoleController implements IController
         return null;
     }
 
+    @Override
+    public int getLedMode()
+    {
+        return this.ledMode;
+    }
+
     public void run()
     {
         try (Scanner console = new Scanner(System.in))
@@ -82,6 +90,18 @@ public class ConsoleController implements IController
                             ConsoleController.printUsage();
                         }
                     }
+                    else if (input.startsWith("led:"))
+                    {
+                        try
+                        {
+                            this.ledMode = Integer.parseInt(input.substring("led:".length()).trim());
+                        }
+                        catch (NumberFormatException nfe)
+                        {
+                            Logger.writeError(String.format("Unknown number after 'led:' %s", input));
+                            ConsoleController.printUsage();
+                        }
+                    }
                     else if (input.equalsIgnoreCase("?") || input.equalsIgnoreCase("help"))
                     {
                         ConsoleController.printUsage();
@@ -94,7 +114,8 @@ public class ConsoleController implements IController
     private static void printUsage()
     {
         Logger.write("Usage:");
-        Logger.write("'mode:##'       -- switch to mode '##'");
+        Logger.write("'mode:##'       -- switch to Vision mode '##'");
+        Logger.write("'led:##'        -- switch to LED mode '##'");
         Logger.write("'quit'          -- quits the loop");
         Logger.write("'?', 'help'     -- display usage");
     }

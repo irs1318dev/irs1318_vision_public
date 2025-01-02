@@ -52,4 +52,10 @@ public class DefaultController implements IController
     {
         return null;
     }
+
+    @Override
+    public int getLedMode()
+    {
+        return 0;
+    }
 }

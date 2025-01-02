@@ -19,7 +19,9 @@
 				"type": "java",
 				"name": "VisionSystem (Launch)",
 				"request": "launch",
-				"mainClass": "frc.vision.Program"
+				"mainClass": "frc1318.vision.Program",
+				"vmArgs": "-Djava.library.path=C:\\opencv\\build\\java\\x64;C:\\Users\\Will\\git\\irs1318_apriltag\\native\\out\\install\\x64-Release\\lib",
+				"args": "/absolute /s:D:\\samples\\"
 			}
 		],
 		"compounds": []

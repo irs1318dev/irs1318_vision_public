@@ -3,6 +3,7 @@ package frc1318.vision.writer;
 import org.opencv.core.Mat;
 
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 import frc1318.vision.calculator.DistanceAngleMeasurements;
 
 public class DebugDistanceAngleWriter implements IResultWriter<DistanceAngleMeasurements>
@@ -23,21 +24,21 @@ public class DebugDistanceAngleWriter implements IResultWriter<DistanceAngleMeas
     }
 
     @Override
-    public void write(DistanceAngleMeasurements measurements, Mat sourceFrame)
+    public void write(DistanceAngleMeasurements measurements, long captureTime, Mat sourceFrame)
     {
-        this.write(measurements);
+        this.write(measurements, captureTime);
     }
 
     @Override
-    public void write(DistanceAngleMeasurements measurements)
+    public void write(DistanceAngleMeasurements measurements, long captureTime)
     {
         if (measurements != null)
         {
-            System.out.println(String.format("Distance: %f, Angle: %f", measurements.getDistance(), measurements.getHorizontalAngle()));
+            Logger.write(String.format("Distance: %f, Angle: %f", measurements.getDistance(), measurements.getHorizontalAngle()));
         }
         else
         {
-            System.out.println("Not found");
+            Logger.write("Not found");
         }
     }
 

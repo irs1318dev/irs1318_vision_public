@@ -37,7 +37,7 @@ public abstract class NetworkTableResultWriterBase<T> implements IResultWriter<T
         NetworkTable table = NetworkTableHelper.getSmartDashboard();
         this.createEntries(table);
 
-        if (VisionConstants.DEBUG && VisionConstants.DEBUG_FRAME_STREAM)
+        if (VisionConstants.DEBUG && VisionConstants.DEBUG_FRAME_STREAM && this.debugStreamName != null)
         {
             this.debugFrameWriter = new CvSource(this.debugStreamName, PixelFormat.kMJPEG, this.streamResolutionX, this.streamResolutionY, 50);
             MjpegServer mjpegServer = CameraServer.startAutomaticCapture(this.debugFrameWriter);

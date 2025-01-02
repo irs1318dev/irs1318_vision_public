@@ -39,9 +39,10 @@ public class LoggingPipeline implements IFramePipeline
      * Process a single image frame
      * 
      * @param sourceFrame image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    public void process(Mat sourceFrame)
+    public void process(Mat sourceFrame, long captureTime)
     {
         if (sourceFrame != null)
         {
@@ -60,7 +61,7 @@ public class LoggingPipeline implements IFramePipeline
 
         if (this.next != null)
         {
-            this.next.process(sourceFrame);
+            this.next.process(sourceFrame, captureTime);
         }
     }
 }

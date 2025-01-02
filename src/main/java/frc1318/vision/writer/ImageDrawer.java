@@ -52,7 +52,7 @@ public class ImageDrawer<T> implements IResultWriter<T>
     }
 
     @Override
-    public void write(T result, Mat sourceFrame)
+    public void write(T result, long captureTime, Mat sourceFrame)
     {
         if (this.frame != null)
         {
@@ -65,7 +65,7 @@ public class ImageDrawer<T> implements IResultWriter<T>
     }
 
     @Override
-    public void write(T result)
+    public void write(T result, long captureTime)
     {
         if (result != null)
         {

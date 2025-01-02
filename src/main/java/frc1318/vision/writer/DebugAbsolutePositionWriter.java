@@ -4,11 +4,11 @@ import org.opencv.core.Mat;
 
 import frc1318.vision.IResultWriter;
 import frc1318.vision.Logger;
-import frc1318.vision.calculator.DistancesAnglesMeasurements;
+import frc1318.vision.calculator.AbsolutePositionMeasurement;
 
-public class DebugDistancesAnglesWriter implements IResultWriter<DistancesAnglesMeasurements>
+public class DebugAbsolutePositionWriter implements IResultWriter<AbsolutePositionMeasurement>
 {
-    public DebugDistancesAnglesWriter()
+    public DebugAbsolutePositionWriter()
     {
     }
 
@@ -24,13 +24,13 @@ public class DebugDistancesAnglesWriter implements IResultWriter<DistancesAngles
     }
 
     @Override
-    public void write(DistancesAnglesMeasurements measurements, long captureTime, Mat sourceFrame)
+    public void write(AbsolutePositionMeasurement measurements, long captureTime, Mat sourceFrame)
     {
         this.write(measurements, captureTime);
     }
 
     @Override
-    public void write(DistancesAnglesMeasurements measurements, long captureTime)
+    public void write(AbsolutePositionMeasurement measurements, long captureTime)
     {
         if (measurements != null)
         {

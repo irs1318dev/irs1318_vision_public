@@ -1,5 +1,7 @@
 package frc1318.vision.controller;
 
+import java.util.List;
+
 import frc1318.vision.IController;
 
 public class DefaultController implements IController
@@ -34,8 +36,20 @@ public class DefaultController implements IController
     }
 
     @Override
+    public boolean isEnabled()
+    {
+        return true;
+    }
+
+    @Override
     public int getProcessingMode()
     {
         return this.mode;
+    }
+
+    @Override
+    public List<Integer> getDesiredTarget()
+    {
+        return null;
     }
 }

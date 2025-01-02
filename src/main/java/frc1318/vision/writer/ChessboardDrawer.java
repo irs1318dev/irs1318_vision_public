@@ -13,6 +13,7 @@ import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 
+import frc1318.vision.Logger;
 import frc1318.vision.VisionConstants;
 import frc1318.vision.helpers.MatrixHelper;
 
@@ -58,7 +59,7 @@ public class ChessboardDrawer extends ImageDrawer<MatOfPoint2f>
         super.close();
 
         int points = this.objectPoints.size();
-        System.out.println(String.format("points: %d", points));
+        Logger.write(String.format("points: %d", points));
         if (points > 15)
         {
             // init needed variables according to OpenCV docs
@@ -66,19 +67,19 @@ public class ChessboardDrawer extends ImageDrawer<MatOfPoint2f>
             List<Mat> tvecs = new ArrayList<Mat>();
 
             Mat cameraMatrix = new Mat(3, 3, CvType.CV_32FC1);
-            cameraMatrix.put(0, 0, VisionConstants.ELP_CAMERA_FOCAL_LENGTH_X);
+            cameraMatrix.put(0, 0, VisionConstants.ELP_FHD_CAMERA_FOCAL_LENGTH_X);
             cameraMatrix.put(0, 2, this.resolution.width / 2.0);
-            cameraMatrix.put(1, 1, VisionConstants.ELP_CAMERA_FOCAL_LENGTH_Y);
+            cameraMatrix.put(1, 1, VisionConstants.ELP_FHD_CAMERA_FOCAL_LENGTH_Y);
             cameraMatrix.put(1, 2, this.resolution.height / 2.0);
             cameraMatrix.put(2, 2, 1.0);
 
             Mat distCoeffs = new Mat();
 
             double reprojectionError = Calib3d.calibrateCamera(this.objectPoints, this.imagePoints, this.resolution, cameraMatrix, distCoeffs, rvecs, tvecs, Calib3d.CALIB_USE_INTRINSIC_GUESS);
-            System.out.println(String.format("resolution: %f x %f", this.resolution.width, this.resolution.height));
-            System.out.println(String.format("cameraMatrix: %s", MatrixHelper.toString(cameraMatrix)));
-            System.out.println(String.format("distCoeffs: %s", MatrixHelper.toString(distCoeffs)));
-            System.out.println(String.format("reprojectionError: %f", reprojectionError));
+            Logger.write(String.format("resolution: %f x %f", this.resolution.width, this.resolution.height));
+            Logger.write(String.format("cameraMatrix: %s", MatrixHelper.toString(cameraMatrix)));
+            Logger.write(String.format("distCoeffs: %s", MatrixHelper.toString(distCoeffs)));
+            Logger.write(String.format("reprojectionError: %f", reprojectionError));
 
             cameraMatrix.release();
             distCoeffs.release();
@@ -86,7 +87,7 @@ public class ChessboardDrawer extends ImageDrawer<MatOfPoint2f>
     }
 
     @Override
-    public void write(MatOfPoint2f result, Mat sourceFrame)
+    public void write(MatOfPoint2f result, long captureTime, Mat sourceFrame)
     {
         if (result != null)
         {
@@ -106,6 +107,6 @@ public class ChessboardDrawer extends ImageDrawer<MatOfPoint2f>
             }
         }
 
-        super.write(result, sourceFrame);
+        super.write(result, captureTime, sourceFrame);
     }
 }

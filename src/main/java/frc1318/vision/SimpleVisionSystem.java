@@ -32,10 +32,11 @@ public class SimpleVisionSystem extends VisionSystemBase
     /**
      * Extension method for processing the image (without disposing it)
      * @param image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    protected void process(Mat image)
+    protected void process(Mat image, long captureTime)
     {
-        this.framePipeline.process(image);
+        this.framePipeline.process(image, captureTime);
     }
 }

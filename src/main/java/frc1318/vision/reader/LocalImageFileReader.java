@@ -5,13 +5,13 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 import frc1318.vision.CameraSettings;
 import frc1318.vision.IFrameReader;
+import frc1318.vision.helpers.Pair;
 
 public class LocalImageFileReader implements IFrameReader
 {
     private final boolean readForever;
 
     private String fileName;
-    private boolean stop;
 
     /**
      * Initializes a new instance of the LocalImageFileReader class.
@@ -32,7 +32,6 @@ public class LocalImageFileReader implements IFrameReader
         this.readForever = readForever;
 
         this.fileName = fileName;
-        this.stop = false;
     }
 
     /**
@@ -41,7 +40,7 @@ public class LocalImageFileReader implements IFrameReader
      * @throws InterruptedException
      */
     @Override
-    public Mat getCurrentFrame() throws InterruptedException
+    public Pair<Mat, Long> getCurrentFrame() throws InterruptedException
     {
         if (this.fileName == null)
         {
@@ -54,7 +53,7 @@ public class LocalImageFileReader implements IFrameReader
             this.fileName = null;
         }
 
-        return image;
+        return new Pair<Mat, Long>(image, System.currentTimeMillis());
     }
 
     /**
@@ -75,23 +74,5 @@ public class LocalImageFileReader implements IFrameReader
     @Override
     public void setSettings(CameraSettings settings)
     {
-    }
-
-    /**
-     * Run the thread that captures frames and buffers the most recently retrieved frame so that an pipeline can use it.
-     */
-    @Override
-    public void run()
-    {
-        while (!this.stop);
-    }
-
-    /**
-     * stop retrieving frames
-     */
-    @Override
-    public void stop()
-    {
-        this.stop = true;
     }
 }

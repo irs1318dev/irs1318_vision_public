@@ -3,8 +3,10 @@ package frc1318.vision.calculator;
 import org.opencv.core.Mat;
 
 import frc1318.apriltag.*;
+import frc1318.opencv.*;
 
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 import frc1318.vision.VisionConstants;
 
 public class DistancesAnglesVisionCalculator implements IResultWriter<AprilTagDetection>
@@ -50,9 +52,9 @@ public class DistancesAnglesVisionCalculator implements IResultWriter<AprilTagDe
         double cameraCenterY,
         double cameraFocalX,
         double cameraFocalY,
-        double cameraYaw,
-        double cameraPitch,
         double cameraRoll,
+        double cameraPitch,
+        double cameraYaw,
         double cameraXOffset,
         double cameraYOffset,
         double cameraZOffset)
@@ -60,13 +62,13 @@ public class DistancesAnglesVisionCalculator implements IResultWriter<AprilTagDe
         this.writer = writer;
 
         this.tagSize = tagSize;
-        this.cameraFocalX = cameraFocalX;
-        this.cameraFocalY = cameraFocalY;
         this.cameraCenterX = cameraCenterX;
         this.cameraCenterY = cameraCenterY;
-        this.cameraYaw = cameraYaw;
-        this.cameraPitch = cameraPitch;
+        this.cameraFocalX = cameraFocalX;
+        this.cameraFocalY = cameraFocalY;
         this.cameraRoll = cameraRoll;
+        this.cameraPitch = cameraPitch;
+        this.cameraYaw = cameraYaw;
         this.cameraXOffset = cameraXOffset;
         this.cameraYOffset = cameraYOffset;
         this.cameraZOffset = cameraZOffset;
@@ -81,7 +83,7 @@ public class DistancesAnglesVisionCalculator implements IResultWriter<AprilTagDe
         {
             if (VisionConstants.DEBUG && VisionConstants.DEBUG_PRINT_OUTPUT)
             {
-                System.out.println("No AprilTag detected!");
+                Logger.write("No AprilTag detected!");
             }
 
             return null;
@@ -112,8 +114,8 @@ public class DistancesAnglesVisionCalculator implements IResultWriter<AprilTagDe
         Mat4 t_apriltag_rel_robot = pose.getTransformation();
         if (VisionConstants.DEBUG && VisionConstants.DEBUG_PRINT_OUTPUT)
         {
-            System.out.println(String.format("Affine Transformation: %s, error: %f", t_apriltag_rel_robot.toString(), pose.getError()));
-            System.out.println(String.format("Offsets: (%f, %f, %f), Yaw: %f, Pitch: %f, Roll: %f", this.offset[0], this.offset[1], this.offset[2], this.ypr[0], this.ypr[1], this.ypr[2]));
+            Logger.write(String.format("Affine Transformation: %s, error: %f", t_apriltag_rel_robot.toString(), pose.getError()));
+            Logger.write(String.format("Offsets: (%f, %f, %f), Yaw: %f, Pitch: %f, Roll: %f", this.offset[0], this.offset[1], this.offset[2], this.ypr[0], this.ypr[1], this.ypr[2]));
         }
 
         t_apriltag_rel_robot.release();
@@ -137,15 +139,15 @@ public class DistancesAnglesVisionCalculator implements IResultWriter<AprilTagDe
     }
 
     @Override
-    public void write(AprilTagDetection result, Mat mat)
+    public void write(AprilTagDetection result, long captureTime, Mat mat)
     {
-        this.writer.write(this.calculate(result), mat);
+        this.writer.write(this.calculate(result), captureTime, mat);
     }
 
     @Override
-    public void write(AprilTagDetection result)
+    public void write(AprilTagDetection result, long captureTime)
     {
-        this.writer.write(this.calculate(result));
+        this.writer.write(this.calculate(result), captureTime);
     }
 
     @Override

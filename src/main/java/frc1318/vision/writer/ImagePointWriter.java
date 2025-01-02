@@ -7,6 +7,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 
 public class ImagePointWriter implements IResultWriter<Point>
 {
@@ -43,13 +44,13 @@ public class ImagePointWriter implements IResultWriter<Point>
     }
 
     @Override
-    public void write(Point point, Mat sourceFrame)
+    public void write(Point point, long captureTime, Mat sourceFrame)
     {
         if (this.count++ > ImagePointWriter.COUNT_BREAK)
         {
             if (!Imgcodecs.imwrite(String.format("%simage%d.png", this.dirName, this.i), sourceFrame))
             {
-                System.out.println("failed to write image!");
+                Logger.write("failed to write image!");
             }
             else
             {
@@ -59,7 +60,7 @@ public class ImagePointWriter implements IResultWriter<Point>
 
                     if (!Imgcodecs.imwrite(String.format("%simage%d.redrawn.png", this.dirName, this.i), sourceFrame))
                     {
-                        System.out.println("failed to write redrawn image!");
+                        Logger.write("failed to write redrawn image!");
                     }
                 }
             }
@@ -68,19 +69,19 @@ public class ImagePointWriter implements IResultWriter<Point>
             this.count = 0;
         }
 
-        this.write(point);
+        this.write(point, captureTime);
     }
 
     @Override
-    public void write(Point point)
+    public void write(Point point, long captureTime)
     {
         if (point != null)
         {
-            System.out.println(String.format("Point: %f, %f", point.x, point.y));
+            Logger.write(String.format("Point: %f, %f", point.x, point.y));
         }
         else
         {
-            System.out.println("Point not found");
+            Logger.write("Point not found");
         }
     }
 

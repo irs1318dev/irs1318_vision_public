@@ -16,9 +16,10 @@ public class EmptyPipeline implements IFramePipeline
     /**
      * Process a single image frame
      * @param frame image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    public void process(Mat image)
+    public void process(Mat image, long captureTime)
     {
     }
 }

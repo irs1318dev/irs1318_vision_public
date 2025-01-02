@@ -5,9 +5,9 @@ import org.opencv.core.*;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.cscore.MjpegServer;
-import edu.wpi.first.cscore.VideoMode;
 import edu.wpi.first.util.PixelFormat;
 import frc1318.vision.helpers.Assert;
+import frc1318.vision.helpers.Pair;
 
 public abstract class VisionSystemBase implements Runnable, IOpenable
 {
@@ -21,7 +21,7 @@ public abstract class VisionSystemBase implements Runnable, IOpenable
     private CvSource rawFrameWriter;
     private long lastFrameSent;
 
-    private boolean shouldStop;
+    private volatile boolean shouldStop;
 
     /**
      * Initializes a new instance of the VisionSystemBase class.
@@ -82,7 +82,7 @@ public abstract class VisionSystemBase implements Runnable, IOpenable
                     long elapsedTime = capturedTime - lastMeasured;
 
                     double framesPerMillisecond = ((double)VisionConstants.DEBUG_FPS_AVERAGING_INTERVAL) / elapsedTime;
-                    System.out.println(
+                    Logger.write(
                         String.format("Recent Average frame processing rate %f fps", 1000.0 * framesPerMillisecond));
 
                     lastMeasured = capturedTime;
@@ -92,7 +92,7 @@ public abstract class VisionSystemBase implements Runnable, IOpenable
         }
         catch (InterruptedException ex)
         {
-            System.out.println("VisionSystem thread interrupted.");
+            Logger.write("VisionSystem thread interrupted.");
             ex.printStackTrace();
         }
         catch (Exception ex)
@@ -130,7 +130,7 @@ public abstract class VisionSystemBase implements Runnable, IOpenable
      */
     public long captureAndProcess() throws InterruptedException
     {
-        Mat image = this.frameReader.getCurrentFrame();
+        Pair<Mat, Long> image = this.frameReader.getCurrentFrame();
         if (image == null)
         {
             return 0L;
@@ -144,19 +144,25 @@ public abstract class VisionSystemBase implements Runnable, IOpenable
                 elapsedTime >= VisionConstants.STREAM_FRAME_GAP_MILLIS)
             {
                 this.lastFrameSent = currTime;
-                this.rawFrameWriter.putFrame(image);
+                this.rawFrameWriter.putFrame(image.first);
+            }
+            else if (this.lastFrameSent > currTime + VisionConstants.STREAM_FRAME_GAP_MILLIS)
+            {
+                // check for weirdness...
+                this.lastFrameSent = currTime;
             }
         }
 
-        this.process(image);
+        this.process(image.first, image.second);
 
-        image.release();
+        image.first.release();
         return currTime;
     }
 
     /**
      * Extension method for processing the image (without disposing it)
      * @param image to process
+     * @param captureTime when the image was captured
      */
-    protected abstract void process(Mat image);
+    protected abstract void process(Mat image, long captureTime);
 }

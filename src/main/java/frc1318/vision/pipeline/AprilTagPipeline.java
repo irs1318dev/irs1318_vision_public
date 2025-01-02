@@ -16,6 +16,7 @@ public class AprilTagPipeline<T> implements IFramePipeline
 
     private final Mat mask;
     private final ImageUndistorter undistorter;
+    private final boolean isGrayscale;
     private final AprilTagDetector aprilTagDetector;
     private final IAprilTagFilter<T> tagFilter;
 
@@ -29,6 +30,7 @@ public class AprilTagPipeline<T> implements IFramePipeline
      * @param output                 output writer
      * @param mask                   to use for removing selected parts of the image
      * @param undistorter            frame undistorter
+     * @param grayscaleSource        Whether the source images are grayscale already, or in BGR and need conversion to Grayscale
      * @param processingEnabledValue value indicating when processing is enabled
      * @param tagFilter              AprilTag filter
      * @param tagFamily              AprilTag family
@@ -43,6 +45,7 @@ public class AprilTagPipeline<T> implements IFramePipeline
         IResultWriter<T> output,
         Mat mask,
         ImageUndistorter undistorter,
+        boolean grayscaleSource,
         IAprilTagFilter<T> tagFilter,
         AprilTagFamily tagFamily,
         int tagMaxHammingDistance,
@@ -76,25 +79,34 @@ public class AprilTagPipeline<T> implements IFramePipeline
             this.maskedFrame = null;
         }
 
+        if (grayscaleSource)
+        {
+            this.isGrayscale = true;
+            this.gray = null;
+        }
+        else
+        {
+            this.isGrayscale = false;
+            this.gray = new Mat();
+        }
 
         this.tagFilter = tagFilter;
 
         this.aprilTagDetector = AprilTag.create(tagFamily, tagMaxHammingDistance, tagThreads, tagQuadDecimate, tagQuadSigma, tagRefineEdges, tagDecodeSharpening, false);
-
-        this.gray = new Mat();
     }
 
     /**
      * Process a single image frame
      * 
      * @param sourceFrame image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    public void process(Mat sourceFrame)
+    public void process(Mat sourceFrame, long captureTime)
     {
         if (sourceFrame == null)
         {
-            this.output.write(null);
+            this.output.write(null, captureTime);
             return;
         }
 
@@ -113,17 +125,26 @@ public class AprilTagPipeline<T> implements IFramePipeline
             frameToUse = this.frameUndistort;
         }
 
-        // third, convert BGR to Gray
-        Imgproc.cvtColor(frameToUse, this.gray, Imgproc.COLOR_BGR2GRAY);
+        // third, convert BGR to Gray if necessary
+        Mat grayFrame;
+        if (this.isGrayscale)
+        {
+            grayFrame = frameToUse;
+        }
+        else
+        {
+            Imgproc.cvtColor(frameToUse, this.gray, Imgproc.COLOR_BGR2GRAY);
+            grayFrame = this.gray;
+        }
 
         // fourth, detect tags
-        AprilTagDetection[] detectedTags = this.aprilTagDetector.detect(this.gray);
+        AprilTagDetection[] detectedTags = this.aprilTagDetector.detect(grayFrame);
 
         // filter the detected tags
         T result = this.tagFilter.filter(detectedTags);
 
         // finally, output the result
-        this.output.write(result, frameToUse);
+        this.output.write(result, captureTime, frameToUse);
 
         if (result != null)
         {
@@ -134,7 +155,7 @@ public class AprilTagPipeline<T> implements IFramePipeline
             }
             else if (result instanceof AprilTagDetection)
             {
-                ((AprilTagDetection)result).destroy();
+                ((AprilTagDetection)result).release();
                 result = null;
             }
         }

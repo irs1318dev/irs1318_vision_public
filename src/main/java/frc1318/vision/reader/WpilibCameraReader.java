@@ -7,10 +7,13 @@ import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.VideoCamera;
 import edu.wpi.first.cameraserver.*;
 import frc1318.vision.CameraSettings;
-import frc1318.vision.IFrameReader;
+import frc1318.vision.IController;
+import frc1318.vision.IRunnableFrameReader;
+import frc1318.vision.helpers.Pair;
 
-public class WpilibCameraReader implements IFrameReader
+public class WpilibCameraReader implements IRunnableFrameReader
 {
+    private final IController controller;
     private final String videoUrl;
     private final int usbId;
     private final String cameraName;
@@ -22,20 +25,24 @@ public class WpilibCameraReader implements IFrameReader
     private Object frameLock;
     private Object settingsLock;
     private Mat currentFrame;
-    private boolean frameReady;
-    private boolean stop;
+    private long captureTime;
+    private volatile boolean frameReady;
+    private volatile boolean stop;
     private CameraSettings newSettings;
 
     private boolean opened;
 
     /**
      * Initializes a new instance of the WpilibCameraReader class.
+     * @param controller to use to determine if we should keep collecting frames
      * @param videoUrl to use to retrieve frame data from an IP camera
      * @param cameraName name of the camera
      * @param reprocessImage whether to allow a caller to retrieve the same frame multiple times
      */
-    public WpilibCameraReader(String videoUrl, String cameraName, boolean reprocessImage)
+    public WpilibCameraReader(IController controller, String videoUrl, String cameraName, boolean reprocessImage)
     {
+        this.controller = controller;
+
         this.videoUrl = videoUrl;
         this.usbId = -1;
         this.cameraName = cameraName;
@@ -44,6 +51,7 @@ public class WpilibCameraReader implements IFrameReader
         this.frameLock = new Object();
         this.settingsLock = new Object();
         this.currentFrame = null;
+        this.captureTime = 0L;
         this.frameReady = false;
         this.stop = false;
 
@@ -54,12 +62,15 @@ public class WpilibCameraReader implements IFrameReader
 
     /**
      * Initializes a new instance of the WpilibCameraReader class.
+     * @param controller to use to determine if we should keep collecting frames
      * @param usbId to use to identify a local USB camera
      * @param cameraName name of the camera
      * @param reprocessImage whether to allow a caller to retrieve the same frame multiple times
      */
-    public WpilibCameraReader(int usbId, String cameraName, boolean reprocessImage)
+    public WpilibCameraReader(IController controller, int usbId, String cameraName, boolean reprocessImage)
     {
+        this.controller = controller;
+
         this.usbId = usbId;
         this.videoUrl = null;
         this.cameraName = cameraName;
@@ -150,24 +161,35 @@ public class WpilibCameraReader implements IFrameReader
                     UsbCamera usbCamera = (UsbCamera)this.camera;
                     if (settings.Exposure > 0)
                     {
-                        usbCamera.setExposureManual(settings.Exposure);
+                        usbCamera.setExposureManual((int)settings.Exposure);
                     }
                     else
                     {
                         usbCamera.setExposureAuto();
                     }
-        
-                    usbCamera.setBrightness(settings.Brightness);
-        
+
+                    usbCamera.setBrightness((int)settings.Brightness);
+
                     usbCamera.setResolution(settings.ResolutionX, settings.ResolutionY);
                     usbCamera.setFPS(settings.FramesPerSecond);
+                }
+
+                if (!this.controller.isEnabled())
+                {
+                    try
+                    {
+                        Thread.sleep(2500);
+                    }
+                    catch (InterruptedException ex)
+                    {
+                    }
                 }
 
                 image = new Mat();
                 long result = this.cvSink.grabFrame(image);
                 if (result != 0)
                 {
-                    this.setCurrentFrame(image);
+                    this.setCurrentFrame(image, result / 1000L);
                 }
             }
 
@@ -193,7 +215,7 @@ public class WpilibCameraReader implements IFrameReader
      * @throws InterruptedException
      */
     @Override
-    public Mat getCurrentFrame() throws InterruptedException
+    public Pair<Mat, Long> getCurrentFrame() throws InterruptedException
     {
         synchronized (this.frameLock)
         {
@@ -211,14 +233,14 @@ public class WpilibCameraReader implements IFrameReader
             {
                 Mat image = new Mat();
                 this.currentFrame.copyTo(image);
-                return image;
+                return new Pair<Mat, Long>(image, this.captureTime);
             }
             else
             {
                 this.frameReady = false;
                 Mat image = this.currentFrame;
                 this.currentFrame = null;
-                return image;
+                return new Pair<Mat, Long>(image, this.captureTime);
             }
         }
     }
@@ -227,8 +249,9 @@ public class WpilibCameraReader implements IFrameReader
      * set the current frame as the current frame
      * 
      * @param frame to set as current
+     * @param captureTime when the image was captured
      */
-    private void setCurrentFrame(Mat frame)
+    private void setCurrentFrame(Mat frame, long captureTime)
     {
         synchronized (this.frameLock)
         {
@@ -241,6 +264,7 @@ public class WpilibCameraReader implements IFrameReader
 
             // hold current frame
             this.currentFrame = frame;
+            this.captureTime = captureTime;
             this.frameReady = true;
 
             // notify another lock holder

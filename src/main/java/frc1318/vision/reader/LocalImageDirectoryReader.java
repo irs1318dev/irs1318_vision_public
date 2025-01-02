@@ -7,11 +7,12 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 import frc1318.vision.CameraSettings;
 import frc1318.vision.IFrameReader;
+import frc1318.vision.helpers.Pair;
 
 public class LocalImageDirectoryReader implements IFrameReader
 {
-    private boolean stop;
-    private File[] files;
+    private final File[] files;
+
     private int index;
 
     /**
@@ -20,8 +21,6 @@ public class LocalImageDirectoryReader implements IFrameReader
      */
     public LocalImageDirectoryReader(String dirName)
     {
-        this.stop = false;
-
         File file = new File(dirName);
         if (!file.exists())
         {
@@ -43,14 +42,14 @@ public class LocalImageDirectoryReader implements IFrameReader
      * @throws InterruptedException
      */
     @Override
-    public Mat getCurrentFrame() throws InterruptedException
+    public Pair<Mat, Long> getCurrentFrame() throws InterruptedException
     {
         if (this.files == null || this.index >= this.files.length)
         {
             return null;
         }
 
-        return Imgcodecs.imread(this.files[this.index++].getAbsolutePath());
+        return new Pair<Mat, Long>(Imgcodecs.imread(this.files[this.index++].getAbsolutePath()), System.currentTimeMillis());
     }
 
     /**
@@ -71,23 +70,5 @@ public class LocalImageDirectoryReader implements IFrameReader
     @Override
     public void setSettings(CameraSettings settings)
     {
-    }
-
-    /**
-     * Run the thread that captures frames and buffers the most recently retrieved frame so that an pipeline can use it.
-     */
-    @Override
-    public void run()
-    {
-        while (!this.stop);
-    }
-
-    /**
-     * stop retrieving frames
-     */
-    @Override
-    public void stop()
-    {
-        this.stop = true;
     }
 }

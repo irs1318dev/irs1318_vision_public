@@ -58,9 +58,10 @@ public class SwitchedVisionSystem extends VisionSystemBase
     /**
      * Extension method for processing the image (without disposing it)
      * @param image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    protected void process(Mat image)
+    protected void process(Mat image, long captureTime)
     {
         int currProcessingMode = this.controller.getProcessingMode();
         boolean updateSettings = false;
@@ -73,25 +74,29 @@ public class SwitchedVisionSystem extends VisionSystemBase
         boolean foundMode = false;
         for (int i = 0; i < this.framePipelines.length; i++)
         {
-            if (this.pipelineProcessingModes[i] == currProcessingMode)
+            IFramePipeline currPipeline = this.framePipelines[i];
+            if (currPipeline != null)
             {
-                if (updateSettings)
+                if (this.pipelineProcessingModes[i] == currProcessingMode)
                 {
-                    // note - won't take effect until at least the next frame
-                    CameraSettings newCameraSettings = this.cameraSettings[i];
-                    if (!this.currentCameraSettings.equals(newCameraSettings))
+                    if (updateSettings)
                     {
-                        this.frameReader.setSettings(newCameraSettings);
-                        this.currentCameraSettings = newCameraSettings;
+                        // note - won't take effect until at least the next frame
+                        CameraSettings newCameraSettings = this.cameraSettings[i];
+                        if (!this.currentCameraSettings.equals(newCameraSettings))
+                        {
+                            this.frameReader.setSettings(newCameraSettings);
+                            this.currentCameraSettings = newCameraSettings;
+                        }
                     }
-                }
 
-                foundMode = true;
-                this.framePipelines[i].process(image);
-            }
-            else
-            {
-                this.framePipelines[i].process(null);
+                    foundMode = true;
+                    currPipeline.process(image, captureTime);
+                }
+                else
+                {
+                    currPipeline.process(null, captureTime);
+                }
             }
         }
 

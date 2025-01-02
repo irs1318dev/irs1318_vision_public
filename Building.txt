@@ -1,15 +1,17 @@
-To download OpenCV releases:
+To download OpenCV releases (we are currently using OpenCV 4.10.0):
 https://github.com/opencv/opencv/releases
 
 Before you can build and run, you must first set a few environment variables based on your OpenCV installation location and irs1318_apriltag build:
-1. Named OPENCV_JAR which is the absolute path to the opencv-460.jar file.
-2. Named OPENCV_JNI_LIB which is the absolute path of the directory where the corresponding opencv_460 library is located.
+1. Named OPENCV_JAR which is the absolute path to the opencv-4100.jar file.
+2. Named OPENCV_JNI_LIB which is the absolute path of the directory where the corresponding opencv_4100 library is located.
 3. Named APRILTAG_JAR which is the absolute path to the irs1318_apriltag-1.0.jar file (built/installed from irs1318_apriltag repository).
 4. Named APRILTAG_JNI_LIB which is the absolute path of the directory where the irs1318_apriltag_native library is located (built/installed from irs1318_apriltag repository).
+5. Named APRILTAG_LIB which is the absoltue path of the directory where the apriltag library is located (built/installed from apriltag repository).
+6. (If you see an issue with unresolved link error when loading the irs1318_apriltag_native library when running, you may also need to add the OpenCV DLL location to PATH for your system.)
 
 For me, this is:
-Windows:	C:\opencv\build\java\opencv-460.jar, C:\opencv\build\java\x64\, C:\Users\wm_ra\git\irs1318_apriltag\managed\build\libs\irs1318_apriltag-1.0.jar, and C:\Users\wm_ra\git\irs1318_apriltag\native\out\install\x64-Release\lib
-Linux:		/usr/local/share/java/opencv4/opencv-460.jar, /usr/local/share/java/opencv4/, /home/irs/irs1318_apriltag/managed/build/libs/irs1318_apriltag-1.0.jar, and /usr/local/lib/
+Windows:	C:\opencv\build\java\opencv-4100.jar, C:\opencv\build\java\x64\, C:\Users\wm_ra\git\irs1318_apriltag\managed\build\libs\irs1318_apriltag-1.0.jar, C:\Users\wm_ra\git\irs1318_apriltag\native\out\install\x64-Release\lib, C:\Users\wm_ra\git\apriltag\out\install\x64-Release\bin, (and C:\opencv\build\x64\vc16\bin)
+Linux:		/usr/local/share/java/opencv4/opencv-4100.jar, /usr/local/share/java/opencv4/, /home/irs/irs1318_apriltag/managed/build/libs/irs1318_apriltag-1.0.jar, and /usr/local/lib/
 
 On Windows you can set the environment variable using Control Panel->System->Advanced->Environment Variables.
 On Linux, add the key-value pair (KEY=VALUE) to /etc/environment.  You can also run "export OPENCV_JAR=..." for temporary variables.
@@ -17,8 +19,9 @@ After adding environment variables, you need to reboot.
 
 Once I have built the jar on the local machine, I can run it by running the following:
 If using AprilTags:
-Windows:	java -jar -Djava.library.path=%OPENCV_JNI_LIB%;%APRILTAG_JNI_LIB% build\libs\irs1318_vision-1.0.jar
-Linux:		java -jar -Djava.library.path=$OPENCV_JNI_LIB:$APRILTAG_JNI_LIB build/libs/irs1318_vision-1.0.jar
+Windows:	java -jar -Djava.library.path=%OPENCV_JNI_LIB%;%APRILTAG_JNI_LIB%;%APRILTAG_LIB% build\libs\irs1318_vision-1.0.jar
+Linux:		java -jar -Djava.library.path=$OPENCV_JNI_LIB:$APRILTAG_JNI_LIB:$APRILTAG_LIB build/libs/irs1318_vision-1.0.jar
+RPI5 built-in camera: libcamerify java -jar -Djava.library.path=$OPENCV_JNI_LIB:$APRILTAG_JNI_LIB:$APRILTAG_LIB build/libs/irs1318_vision-1.0.jar
 Otherwise:
 Windows:	java -jar -Djava.library.path=%OPENCV_JNI_LIB%; build\libs\irs1318_vision-1.0.jar
 Linux:		java -jar -Djava.library.path=$OPENCV_JNI_LIB build/libs/irs1318_vision-1.0.jar

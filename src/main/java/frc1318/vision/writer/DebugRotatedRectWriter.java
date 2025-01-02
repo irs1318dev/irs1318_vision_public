@@ -4,6 +4,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 
 public class DebugRotatedRectWriter implements IResultWriter<RotatedRect>
 {
@@ -23,23 +24,23 @@ public class DebugRotatedRectWriter implements IResultWriter<RotatedRect>
     }
 
     @Override
-    public void write(RotatedRect rotatedRect, Mat sourceFrame)
+    public void write(RotatedRect rotatedRect, long captureTime, Mat sourceFrame)
     {
-        this.write(rotatedRect);
+        this.write(rotatedRect, captureTime);
     }
 
     @Override
-    public void write(RotatedRect rotatedRect)
+    public void write(RotatedRect rotatedRect, long captureTime)
     {
         if (rotatedRect != null)
         {
-            System.out.println(String.format("Center: %f, %f", rotatedRect.center.x, rotatedRect.center.y));
-            System.out.println(String.format("Size: %f, %f", rotatedRect.size.width, rotatedRect.size.height));
-            System.out.println(String.format("Angle: %f", rotatedRect.angle));
+            Logger.write(String.format("Center: %f, %f", rotatedRect.center.x, rotatedRect.center.y));
+            Logger.write(String.format("Size: %f, %f", rotatedRect.size.width, rotatedRect.size.height));
+            Logger.write(String.format("Angle: %f", rotatedRect.angle));
         }
         else
         {
-            System.out.println("Rect not found");
+            Logger.write("Rect not found");
         }
     }
 

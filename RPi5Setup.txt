@@ -1,0 +1,207 @@
+#### Prepare SD Card
+
+# Install Win32DiskImager or other disk imager tool
+https://sourceforge.net/projects/win32diskimager/
+
+# Download Raspberry PI OS image (64-bit Raspberry Pi OS with Desktop)
+https://www.raspberrypi.com/software/operating-systems/
+
+# Unzip the xz file to extrace the img file
+
+# Image a micro-SD card with the img using your disk imager tool
+
+#### Set up Raspberry Pi
+
+# Plug RPi into a monitor, USB keyboard/mouse, power
+
+# Either connect to ethernet cable, or connect to your Wifi during setup.
+
+# Run through first-run experience for Raspberry Pi OS (e.g. setting username to "irs", configuring Keyboard, Timezone, etc.)
+
+# Get OS up-to-date
+
+sudo apt update -y
+
+sudo apt upgrade -y
+
+# Install VS Code (?)
+
+https://code.visualstudio.com/docs/setup/raspberry-pi
+
+# Install GitHub CLI tool
+https://github.com/cli/cli/blob/trunk/docs/install_linux.md#debian-ubuntu-linux-raspberry-pi-os-apt
+
+When it's installed, run "gh auth login" to log into your GitHub account through the CLI (will maintain that login for git commands!)
+
+# install jdk and such
+sudo apt install -y build-essential cmake git unzip pkg-config
+sudo apt install -y ant default-jdk
+
+# Open VS Code, install Java extension kit
+
+#### INSTALL OpenCV
+
+# install the dependencies
+sudo apt install -y build-essential cmake git unzip pkg-config
+sudo apt install -y ant default-jdk
+sudo apt install -y libjpeg-dev libtiff-dev libpng-dev
+sudo apt install -y libavcodec-dev libavformat-dev libswscale-dev
+sudo apt install -y libgtk2.0-dev libcanberra-gtk* libgtk-3-dev
+sudo apt install -y libgstreamer1.0-dev gstreamer1.0-gtk3
+sudo apt install -y libgstreamer-plugins-base1.0-dev gstreamer1.0-gl
+sudo apt install -y libxvidcore-dev libx264-dev
+sudo apt install -y python3-dev python3-numpy python3-pip
+sudo apt install -y libv4l-dev v4l-utils
+sudo apt install -y libopenblas-dev libatlas-base-dev libblas-dev
+sudo apt install -y liblapack-dev gfortran libhdf5-dev
+sudo apt install -y libprotobuf-dev libgoogle-glog-dev libgflags-dev
+sudo apt install -y protobuf-compiler
+sudo apt install -y libtbbmalloc2 libtbb-dev libdc1394-dev
+
+# download the latest version
+cd ~ 
+sudo rm -rf opencv*
+git clone https://github.com/opencv/opencv.git
+git clone https://github.com/opencv/opencv_contrib.git
+
+cd ~/opencv
+git checkout 4.10.0
+
+cd ~/opencv_contrib
+git checkout 4.10.0
+
+# prepare directory
+cd ~/opencv
+mkdir build
+cd build
+
+# run cmake
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_INSTALL_PREFIX=/usr/local \
+-D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+-D ENABLE_NEON=ON \
+-D WITH_OPENMP=ON \
+-D WITH_OPENCL=OFF \
+-D BUILD_TIFF=ON \
+-D WITH_FFMPEG=ON \
+-D WITH_TBB=ON \
+-D BUILD_TBB=ON \
+-D WITH_GSTREAMER=ON \
+-D BUILD_TESTS=OFF \
+-D WITH_EIGEN=OFF \
+-D WITH_V4L=ON \
+-D WITH_LIBV4L=ON \
+-D WITH_VTK=OFF \
+-D WITH_QT=OFF \
+-D WITH_PROTOBUF=ON \
+-D OPENCV_ENABLE_NONFREE=ON \
+-D INSTALL_C_EXAMPLES=OFF \
+-D INSTALL_PYTHON_EXAMPLES=OFF \
+-D PYTHON3_PACKAGES_PATH=/usr/lib/python3/dist-packages \
+-D OPENCV_GENERATE_PKGCONFIG=ON \
+-D BUILD_EXAMPLES=OFF ..
+
+## MAKE SURE THAT THE OUTPUT LISTS Java: YES or Java wrappers: YES.  If not, it won't build/prepare the java wrappers!  You may also need to set the JAVA_HOME environment variable in /etc/environment
+
+# run make
+make -j4
+sudo make install
+sudo ldconfig
+
+# cleaning (frees 320 MB)
+make clean
+
+# reboot
+
+
+#### Install apriltag library
+
+# clone code
+
+cd ~
+git clone https://github.com/irs1318dev/apriltag
+
+# build/install
+cd apriltag
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+sudo cmake --build build --target install
+
+sudo ldconfig
+
+# reboot
+
+
+### Install LibCamera dependencies
+sudo apt install -y libcamera-dev libevent-dev
+
+
+#### Install irs1318_apriltag native library
+
+# clone code
+
+cd ~
+git clone https://github.com/irs1318dev/irs1318_apriltag
+
+# build/install
+cd irs1318_apriltag/native
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+sudo cmake --build build --target install
+
+sudo ldconfig
+
+# reboot
+
+#### Prepare environment variables for irs1318_apriltag managed and irs1318_vision
+
+# edit /etc/environment
+
+sudo nano /etc/environment
+
+# Add the following key-value pairs in the form "KEY=VALUE", each on their own line
+# 1. Named OPENCV_JAR which is the absolute path to the opencv-4100.jar file.
+OPENCV_JAR=/usr/local/share/java/opencv4/opencv-4100.jar
+
+# 2. Named OPENCV_JNI_LIB which is the absolute path of the directory where the corresponding opencv_4100 library is located.
+OPENCV_JNI_LIB=/usr/local/share/java/opencv4/
+
+# 3. Named APRILTAG_JAR which is the absolute path to the irs1318_apriltag-1.0.jar file (built/installed from irs1318_apriltag repository).
+APRILTAG_JAR=/home/irs/irs1318_apriltag/managed/build/libs/irs1318_apriltag-1.0.jar
+
+# 4. Named APRILTAG_JNI_LIB which is the absolute path of the directory where the irs1318_apriltag_native library is located (built/installed from irs1318_apriltag repository).
+APRILTAG_JNI_LIB=/usr/local/lib/
+
+# 5. Named APRILTAG_LIB which is the absoltue path of the directory where the apriltag library is located (built/installed from apriltag repository).
+APRILTAG_LIB=/usr/local/lib/
+
+# save the file using CTRL+O, then hit enter
+
+# reboot
+
+#### Build irs1318_apriltag managed
+
+# set up gradlew to run
+cd ~/irs1318_apriltag
+chmod +x gradlew
+chmod 755 gradlew
+
+# build
+./gradlew build
+
+
+#### Build irs1318_vision
+
+# clone code
+
+cd ~
+git clone https://github.com/irs1318dev/irs1318_vision
+
+# set up gradlew to run
+cd irs1318_vision
+chmod +x gradlew
+chmod 755 gradlew
+
+# build
+./gradlew build
+
+##### Try to run vision system:
+java -jar -Djava.library.path=$OPENCV_JNI_LIB:$APRILTAG_JNI_LIB:$APRILTAG_LIB build/libs/irs1318_vision-1.0.jar /?

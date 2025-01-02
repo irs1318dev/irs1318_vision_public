@@ -94,15 +94,15 @@ public class OffsetDistanceAngleVisionCalculator implements IResultWriter<Point>
     }
 
     @Override
-    public void write(Point result, Mat mat)
+    public void write(Point result, long captureTime, Mat mat)
     {
-        this.writer.write(this.calculate(result), mat);
+        this.writer.write(this.calculate(result), captureTime, mat);
     }
 
     @Override
-    public void write(Point result)
+    public void write(Point result, long captureTime)
     {
-        this.writer.write(this.calculate(result));
+        this.writer.write(this.calculate(result), captureTime);
     }
 
     @Override

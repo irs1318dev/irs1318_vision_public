@@ -84,15 +84,15 @@ public class DistanceAngleVisionCalculator implements IResultWriter<Point>
     }
 
     @Override
-    public void write(Point result, Mat sourceFrame)
+    public void write(Point result, long captureTime, Mat sourceFrame)
     {
-        this.writer.write(this.calculate(result), sourceFrame);
+        this.writer.write(this.calculate(result), captureTime, sourceFrame);
     }
 
     @Override
-    public void write(Point result)
+    public void write(Point result, long captureTime)
     {
-        this.writer.write(this.calculate(result));
+        this.writer.write(this.calculate(result), captureTime);
     }
 
     @Override

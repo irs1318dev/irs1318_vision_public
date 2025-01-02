@@ -19,12 +19,13 @@ public class PassThroughPipeline<T> implements IFramePipeline
 
     /**
      * Process a single image frame
-     * @param frame image to process
+     * @param sourceFrame image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    public void process(Mat sourceFrame)
+    public void process(Mat sourceFrame, long captureTime)
     {
         // finally, output the result
-        this.output.write(null, sourceFrame);
+        this.output.write(null, captureTime, sourceFrame);
     }
 }

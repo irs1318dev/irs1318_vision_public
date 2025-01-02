@@ -1,8 +1,10 @@
 package frc1318.vision.controller;
 
+import java.util.List;
 import java.util.Scanner;
 
 import frc1318.vision.IController;
+import frc1318.vision.Logger;
 
 public class ConsoleController implements IController
 {
@@ -36,9 +38,21 @@ public class ConsoleController implements IController
     }
 
     @Override
+    public boolean isEnabled()
+    {
+        return true;
+    }
+
+    @Override
     public int getProcessingMode()
     {
         return this.mode;
+    }
+
+    @Override
+    public List<Integer> getDesiredTarget()
+    {
+        return null;
     }
 
     public void run()
@@ -64,7 +78,7 @@ public class ConsoleController implements IController
                         }
                         catch (NumberFormatException nfe)
                         {
-                            System.err.println(String.format("Unknown number after 'mode:' %s", input));
+                            Logger.writeError(String.format("Unknown number after 'mode:' %s", input));
                             ConsoleController.printUsage();
                         }
                     }
@@ -79,9 +93,9 @@ public class ConsoleController implements IController
 
     private static void printUsage()
     {
-        System.out.println("Usage:");
-        System.out.println("'mode:##'       -- switch to mode '##'");
-        System.out.println("'quit'          -- quits the loop");
-        System.out.println("'?', 'help'     -- display usage");
+        Logger.write("Usage:");
+        Logger.write("'mode:##'       -- switch to mode '##'");
+        Logger.write("'quit'          -- quits the loop");
+        Logger.write("'?', 'help'     -- display usage");
     }
 }

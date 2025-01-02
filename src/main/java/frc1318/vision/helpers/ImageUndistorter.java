@@ -1,6 +1,7 @@
 package frc1318.vision.helpers;
 
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -51,12 +52,12 @@ public class ImageUndistorter
 
     /**
      * Undistort the frame so that straight lines appear straight in the image
-     * @param soruceFrame to undirsort
+     * @param sourceFrame to undirsort
      * @param targetFrame to contain undistorted data
      */
     public void undistortFrame(Mat sourceFrame, Mat targetFrame)
     {
-        Imgproc.remap(sourceFrame, targetFrame, this.mapX, this.mapY, Imgproc.INTER_LINEAR, Imgproc.WARP_FILL_OUTLIERS, new Scalar(0));
+        Imgproc.remap(sourceFrame, targetFrame, this.mapX, this.mapY, Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT, new Scalar(0));
     }
 
     /**

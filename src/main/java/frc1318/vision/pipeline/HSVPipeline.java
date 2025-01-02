@@ -79,13 +79,14 @@ public class HSVPipeline<T> implements IFramePipeline
      * Process a single image frame
      * 
      * @param sourceFrame image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    public void process(Mat sourceFrame)
+    public void process(Mat sourceFrame, long captureTime)
     {
         if (sourceFrame == null)
         {
-            this.output.write(null);
+            this.output.write(null, captureTime);
             return;
         }
 
@@ -116,7 +117,7 @@ public class HSVPipeline<T> implements IFramePipeline
         T result = this.contourFilter.filter(contours);
 
         // finally, output the result
-        this.output.write(result, frameToUse);
+        this.output.write(result, captureTime, frameToUse);
 
         if (result != null && result instanceof Mat)
         {

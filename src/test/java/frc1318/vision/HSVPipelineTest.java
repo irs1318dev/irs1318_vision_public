@@ -55,7 +55,7 @@ public class HSVPipelineTest
             SimpleVisionSystem vs = new SimpleVisionSystem(frameReader, controller, pipeline, null, 0, 0);
             ranCaptureAndProcess = vs.captureAndProcess();
 
-            verify(pointWriter).write(eq(new Point(x, y)));
+            verify(pointWriter).write(eq(new Point(x, y)), eq(ranCaptureAndProcess));
             verify(pointWriter).outputDebugFrame(anyObject());
             verify(frameReader).getCurrentFrame();
 

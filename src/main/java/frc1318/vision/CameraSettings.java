@@ -2,8 +2,8 @@ package frc1318.vision;
 
 public class CameraSettings
 {
-    public final int Exposure;
-    public final int Brightness;
+    public final double Exposure;
+    public final double Brightness;
     public final int ResolutionX;
     public final int ResolutionY;
     public final int FramesPerSecond;
@@ -17,8 +17,8 @@ public class CameraSettings
      * @param framesPerSecond
      */
     public CameraSettings(
-        int exposure,
-        int brightness,
+        double exposure,
+        double brightness,
         int resolutionX,
         int resolutionY,
         int framesPerSecond)

@@ -12,13 +12,13 @@ public class ImagePointDrawer extends ImageDrawer<Point>
     }
 
     @Override
-    public void write(Point result, Mat sourceFrame)
+    public void write(Point result, long captureTime, Mat sourceFrame)
     {
         if (result != null)
         {
             Imgproc.circle(sourceFrame, result, 5, new Scalar(0, 0, 255), 2);
         }
 
-        super.write(result, sourceFrame);
+        super.write(result, captureTime, sourceFrame);
     }
 }

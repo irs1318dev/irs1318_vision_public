@@ -3,9 +3,8 @@ package frc1318.vision.writer;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
-import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
-
+import frc1318.vision.Logger;
 import frc1318.vision.VisionConstants;
 import frc1318.vision.helpers.NetworkTableHelper;
 
@@ -13,8 +12,8 @@ public class NetworkTablePointWriter extends NetworkTableResultWriterBase<Point>
 {
     private final String component;
 
-    private DoublePublisher xEntry;
-    private DoublePublisher yEntry;
+    private DoublePublisherWrapper xEntry;
+    private DoublePublisherWrapper yEntry;
 
     public NetworkTablePointWriter(
         String component,
@@ -33,18 +32,18 @@ public class NetworkTablePointWriter extends NetworkTableResultWriterBase<Point>
     @Override
     protected void createEntries(NetworkTable table)
     {
-        this.xEntry = table.getDoubleTopic(this.component + ".pointX").publish();
-        this.yEntry = table.getDoubleTopic(this.component + ".pointY").publish();
+        this.xEntry = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".pointX").publish());
+        this.yEntry = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".pointY").publish());
     }
 
     @Override
-    public void write(Point point, Mat sourceFrame)
+    public void write(Point point, long captureTime, Mat sourceFrame)
     {
-        this.write(point);
+        this.write(point, captureTime);
     }
 
     @Override
-    public void write(Point point)
+    public void write(Point point, long captureTime)
     {
         if (point == null)
         {
@@ -63,11 +62,11 @@ public class NetworkTablePointWriter extends NetworkTableResultWriterBase<Point>
         {
             if (point != null)
             {
-                System.out.println(String.format("Point: %f, %f", point.x, point.y));
+                Logger.write(String.format("Point: %f, %f", point.x, point.y));
             }
             else
             {
-                System.out.println("Point not found");
+                Logger.write("Point not found");
             }
         }
     }

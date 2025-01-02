@@ -24,7 +24,7 @@ public class LargestAprilTagCenterFilter implements IAprilTagFilter<Point>
         }
 
         Point center = largestTag.getCenter();
-        largestTag.destroy();
+        largestTag.release();
         return center;
     }
 }

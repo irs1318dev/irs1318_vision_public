@@ -32,9 +32,10 @@ public class CalibrationPipeline implements IFramePipeline
     /**
      * Process a single image frame
      * @param frame image to process
+     * @param captureTime when the image was captured
      */
     @Override
-    public void process(Mat sourceFrame)
+    public void process(Mat sourceFrame, long captureTime)
     {
         MatOfPoint2f points = this.currentImagePoints;
         boolean isTemplateFound = Calib3d.findChessboardCorners(sourceFrame, this.boardSize, points, CalibrationPipeline.CHESSBOARD_FLAGS);
@@ -48,6 +49,16 @@ public class CalibrationPipeline implements IFramePipeline
             points = null;
         }
 
-        this.output.write(points, sourceFrame);
+        try
+        {
+            // Add sleep so that we can see bad samples
+            Thread.sleep(500);
+        }
+        catch (InterruptedException e)
+        {
+            throw new RuntimeException(e);
+        }
+
+        this.output.write(points, captureTime, sourceFrame);
     }
 }

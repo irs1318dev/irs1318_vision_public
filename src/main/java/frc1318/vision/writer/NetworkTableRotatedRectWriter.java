@@ -3,9 +3,8 @@ package frc1318.vision.writer;
 import org.opencv.core.Mat;
 import org.opencv.core.RotatedRect;
 
-import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
-
+import frc1318.vision.Logger;
 import frc1318.vision.VisionConstants;
 import frc1318.vision.helpers.NetworkTableHelper;
 
@@ -13,11 +12,11 @@ public class NetworkTableRotatedRectWriter extends NetworkTableResultWriterBase<
 {
     private final String component;
 
-    private DoublePublisher width;
-    private DoublePublisher height;
-    private DoublePublisher angle;
-    private DoublePublisher pointX;
-    private DoublePublisher pointY;
+    private DoublePublisherWrapper width;
+    private DoublePublisherWrapper height;
+    private DoublePublisherWrapper angle;
+    private DoublePublisherWrapper pointX;
+    private DoublePublisherWrapper pointY;
 
     public NetworkTableRotatedRectWriter(
         String component,
@@ -39,21 +38,21 @@ public class NetworkTableRotatedRectWriter extends NetworkTableResultWriterBase<
     @Override
     protected void createEntries(NetworkTable table)
     {
-        this.width = table.getDoubleTopic(this.component + ".width").publish();
-        this.height = table.getDoubleTopic(this.component + ".height").publish();
-        this.angle = table.getDoubleTopic(this.component + ".angle").publish();
-        this.pointX = table.getDoubleTopic(this.component + ".pointX").publish();
-        this.pointY = table.getDoubleTopic(this.component + ".pointY").publish();
+        this.width = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".width").publish());
+        this.height = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".height").publish());
+        this.angle = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".angle").publish());
+        this.pointX = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".pointX").publish());
+        this.pointY = new DoublePublisherWrapper(table.getDoubleTopic(this.component + ".pointY").publish());
     }
 
     @Override
-    public void write(RotatedRect rotatedRect, Mat sourceFrame)
+    public void write(RotatedRect rotatedRect, long captureTime, Mat sourceFrame)
     {
-        this.write(rotatedRect);
+        this.write(rotatedRect, captureTime);
     }
 
     @Override
-    public void write(RotatedRect rotatedRect)
+    public void write(RotatedRect rotatedRect, long captureTime)
     {
         if (rotatedRect == null)
         {
@@ -78,13 +77,13 @@ public class NetworkTableRotatedRectWriter extends NetworkTableResultWriterBase<
         {
             if (rotatedRect != null)
             {
-                System.out.println(String.format("Center: %f, %f", rotatedRect.center.x, rotatedRect.center.y));
-                System.out.println(String.format("Size: %f, %f", rotatedRect.size.width, rotatedRect.size.height));
-                System.out.println(String.format("Angle: %f", rotatedRect.angle));
+                Logger.write(String.format("Center: %f, %f", rotatedRect.center.x, rotatedRect.center.y));
+                Logger.write(String.format("Size: %f, %f", rotatedRect.size.width, rotatedRect.size.height));
+                Logger.write(String.format("Angle: %f", rotatedRect.angle));
             }
             else
             {
-                System.out.println("Rect not found");
+                Logger.write("Rect not found");
             }
         }
     }

@@ -4,8 +4,9 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import frc1318.apriltag.AprilTagDetection;
 import frc1318.apriltag.AprilTagPose;
-import frc1318.apriltag.Mat4;
+import frc1318.opencv.Mat4;
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 
 public class AprilTagDiagnosticWriter implements IResultWriter<AprilTagDetection>
 {
@@ -30,10 +31,10 @@ public class AprilTagDiagnosticWriter implements IResultWriter<AprilTagDetection
     public AprilTagDiagnosticWriter(
         IResultWriter<Point> pointWriter,
         double tagSize,
-        double cameraFocalX,
-        double cameraFocalY,
         double cameraCenterX,
         double cameraCenterY,
+        double cameraFocalX,
+        double cameraFocalY,
         double cameraRoll,
         double cameraPitch,
         double cameraYaw,
@@ -44,10 +45,10 @@ public class AprilTagDiagnosticWriter implements IResultWriter<AprilTagDetection
         this.pointWriter = pointWriter;
 
         this.tagSize = tagSize;
-        this.cameraFocalX = cameraFocalX;
-        this.cameraFocalY = cameraFocalY;
         this.cameraCenterX = cameraCenterX;
         this.cameraCenterY = cameraCenterY;
+        this.cameraFocalX = cameraFocalX;
+        this.cameraFocalY = cameraFocalY;
         this.cameraYaw = cameraYaw;
         this.cameraPitch = cameraPitch;
         this.cameraRoll = cameraRoll;
@@ -76,15 +77,15 @@ public class AprilTagDiagnosticWriter implements IResultWriter<AprilTagDetection
     }
 
     @Override
-    public void write(AprilTagDetection detection, Mat sourceFrame)
+    public void write(AprilTagDetection detection, long captureTime, Mat sourceFrame)
     {
-        this.pointWriter.write(this.writeDiagnostic(detection), sourceFrame);
+        this.pointWriter.write(this.writeDiagnostic(detection), captureTime, sourceFrame);
     }
 
     @Override
-    public void write(AprilTagDetection detection)
+    public void write(AprilTagDetection detection, long captureTime)
     {
-        this.pointWriter.write(this.writeDiagnostic(detection));
+        this.pointWriter.write(this.writeDiagnostic(detection), captureTime);
     }
 
     @Override
@@ -113,7 +114,7 @@ public class AprilTagDiagnosticWriter implements IResultWriter<AprilTagDetection
         }
 
         Point[] vertices = detection.getVertices();
-        System.out.println(
+        Logger.write(
             String.format(
                 "Id: %d, DecisionMargin: %.2f, Hamming: %d, Edges: (%.1f, %.1f), (%.1f, %.1f), (%.1f, %.1f), (%.1f, %.1f)",
                 detection.getId(),
@@ -140,8 +141,8 @@ public class AprilTagDiagnosticWriter implements IResultWriter<AprilTagDetection
 
         Mat4 t_apriltag_rel_robot = pose.getTransformation();
 
-        System.out.println(String.format("Original: %s, error: %f", t_apriltag_rel_robot.toString(), pose.getError()));
-        System.out.println(String.format("Offset: (%f, %f, %f), Yaw: %f, Pitch: %f, Roll: %f", offset[0], offset[1], offset[2], ypr[0], ypr[1], ypr[2]));
+        Logger.write(String.format("Original: %s, error: %f", t_apriltag_rel_robot.toString(), pose.getError()));
+        Logger.write(String.format("Offset: (%f, %f, %f), Yaw: %f, Pitch: %f, Roll: %f", offset[0], offset[1], offset[2], ypr[0], ypr[1], ypr[2]));
 
         return detection.getCenter();
     }

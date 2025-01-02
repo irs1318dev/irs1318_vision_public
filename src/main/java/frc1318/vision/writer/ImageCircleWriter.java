@@ -6,6 +6,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 import frc1318.vision.calculator.Circle;
 
 public class ImageCircleWriter implements IResultWriter<Circle>
@@ -43,13 +44,13 @@ public class ImageCircleWriter implements IResultWriter<Circle>
     }
 
     @Override
-    public void write(Circle circle, Mat sourceFrame)
+    public void write(Circle circle, long captureTime, Mat sourceFrame)
     {
         if (this.count++ > ImageCircleWriter.COUNT_BREAK)
         {
             if (!Imgcodecs.imwrite(String.format("%simage%d.png", this.dirName, this.i), sourceFrame))
             {
-                System.out.println("failed to write image!");
+                Logger.write("failed to write image!");
             }
             else
             {
@@ -59,7 +60,7 @@ public class ImageCircleWriter implements IResultWriter<Circle>
 
                     if (!Imgcodecs.imwrite(String.format("%simage%d.redrawn.png", this.dirName, this.i), sourceFrame))
                     {
-                        System.out.println("failed to write redrawn image!");
+                        Logger.write("failed to write redrawn image!");
                     }
                 }
             }
@@ -68,19 +69,19 @@ public class ImageCircleWriter implements IResultWriter<Circle>
             this.count = 0;
         }
 
-        this.write(circle);
+        this.write(circle, captureTime);
     }
 
     @Override
-    public void write(Circle circle)
+    public void write(Circle circle, long captureTime)
     {
         if (circle != null)
         {
-            System.out.println(String.format("Point: %f, %f. Radius: %f", circle.getCenter().x, circle.getCenter().y, circle.getRadius()));
+            Logger.write(String.format("Point: %f, %f. Radius: %f", circle.getCenter().x, circle.getCenter().y, circle.getRadius()));
         }
         else
         {
-            System.out.println("Point not found");
+            Logger.write("Point not found");
         }
     }
 

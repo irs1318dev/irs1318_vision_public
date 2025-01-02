@@ -7,15 +7,17 @@ public interface IResultWriter<T> extends IOpenable
     /**
      * Write a result
      * @param result to write
+     * @param captureTime when the image was captured
      * @param sourceFrame that it came from
      */
-    public void write(T result, Mat sourceFrame);
+    public void write(T result, long captureTime, Mat sourceFrame);
 
     /**
      * Write a result
      * @param result to write
+     * @param captureTime when the image was captured
      */
-    public void write(T result);
+    public void write(T result, long captureTime);
 
     /**
      * Output a debug camera frame

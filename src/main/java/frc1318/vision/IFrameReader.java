@@ -2,7 +2,9 @@ package frc1318.vision;
 
 import org.opencv.core.Mat;
 
-public interface IFrameReader extends Runnable, IOpenable
+import frc1318.vision.helpers.Pair;
+
+public interface IFrameReader extends IOpenable
 {
     /**
      * Update camera settings
@@ -12,14 +14,9 @@ public interface IFrameReader extends Runnable, IOpenable
 
     /**
      * Retrieve an image frame
-     * @return frame of an image
+     * @return frame of an image and when it was captured
      * @throws InterruptedException
      */
-    public Mat getCurrentFrame()
+    public Pair<Mat, Long> getCurrentFrame()
         throws InterruptedException;
-
-    /**
-     * stop retrieving frames
-     */
-    public void stop();
 }

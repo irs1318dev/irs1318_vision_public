@@ -4,6 +4,7 @@ import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import frc1318.vision.IResultWriter;
+import frc1318.vision.Logger;
 import frc1318.vision.calculator.DistanceAngleMeasurements;
 
 public class ImageDistanceAngleWriter implements IResultWriter<DistanceAngleMeasurements>
@@ -41,32 +42,32 @@ public class ImageDistanceAngleWriter implements IResultWriter<DistanceAngleMeas
     }
 
     @Override
-    public void write(DistanceAngleMeasurements measurements, Mat sourceFrame)
+    public void write(DistanceAngleMeasurements measurements, long captureTime, Mat sourceFrame)
     {
         if (this.count++ > ImageDistanceAngleWriter.COUNT_BREAK)
         {
             if (!Imgcodecs.imwrite(String.format("%simage%d.png", this.dirName, this.i), sourceFrame))
             {
-                System.out.println("failed to write image!");
+                Logger.write("failed to write image!");
             }
 
             this.i++;
             this.count = 0;
         }
 
-        this.write(measurements);
+        this.write(measurements, captureTime);
     }
 
     @Override
-    public void write(DistanceAngleMeasurements measurements)
+    public void write(DistanceAngleMeasurements measurements, long captureTime)
     {
         if (measurements != null)
         {
-            System.out.println(String.format("Distance: %f, Angle: %f", measurements.getDistance(), measurements.getHorizontalAngle()));
+            Logger.write(String.format("Distance: %f, Angle: %f", measurements.getDistance(), measurements.getHorizontalAngle()));
         }
         else
         {
-            System.out.println("Not found");
+            Logger.write("Not found");
         }
     }
 

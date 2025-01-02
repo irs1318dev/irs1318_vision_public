@@ -2,7 +2,7 @@ plugins
 {
     id "java"
     id "application"
-    id "edu.wpi.first.GradleRIO" version "2024.1.1"
+    id "edu.wpi.first.GradleRIO" version "2024.3.1"
     id 'edu.wpi.first.WpilibTools' version '1.3.0'
 }
 
@@ -34,6 +34,11 @@ String opencvJar = System.getenv('OPENCV_JAR')
 String apriltagJar = System.getenv('APRILTAG_JAR')
 dependencies
 {
+    // Our dependencies
+    implementation files(opencvJar)
+    implementation files(apriltagJar)
+    implementation "net.samuelcampos:usbdrivedetector:2.1.1"
+
     // WPILib and its dependencies:
     implementation wpilibTools.deps.wpilibJava("wpiutil")
     //implementation wpilibTools.deps.wpilibJava("wpimath")
@@ -50,11 +55,6 @@ dependencies
     implementation group: "org.ejml", name: "ejml-simple", version: wpi.versions.ejmlVersion.get()
     implementation group: "us.hebi.quickbuf", name: "quickbuf-runtime", version: wpi.versions.quickbufVersion.get();
 
-    // Our dependencies
-    implementation files(opencvJar)
-    implementation files(apriltagJar)
-    implementation "net.samuelcampos:usbdrivedetector:2.1.1"
-
     testImplementation "org.mockito:mockito-all:1.10.19"
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.1.0"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.1.0"
@@ -63,7 +63,7 @@ dependencies
 test {
     useJUnitPlatform()
     workingDir = "."
-    systemProperty "java.library.path", System.getenv('OPENCV_LIB')
+    systemProperty "java.library.path", ("" + System.getenv('OPENCV_JNI_LIB') + ";" + System.getenv('APRILTAG_JNI_LIB'))
 }
 
 

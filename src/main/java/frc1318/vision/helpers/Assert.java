@@ -1,12 +1,17 @@
 package frc1318.vision.helpers;
 
+import frc1318.vision.Logger;
+
 public class Assert
 {
     public static void IsNotNull(Object value, String name)
     {
         if (value == null)
         {
-            throw new RuntimeException("Expected " + name + " to be non-null!");
+            String errorMessage = "Expected " + name + " to be non-null!";
+            Logger.writeError(errorMessage);
+
+            throw new RuntimeException(errorMessage);
         }
     }
 
@@ -24,6 +29,8 @@ public class Assert
             {
                 message = String.format("expected %s to equal %s", first == null ? "null" : first.toString(), second == null ? "null" : second.toString());
             }
+
+            Logger.writeError(message);
 
             throw new RuntimeException(message);
         }

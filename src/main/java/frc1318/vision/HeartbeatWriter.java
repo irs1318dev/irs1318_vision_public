@@ -9,13 +9,15 @@ public class HeartbeatWriter implements Runnable, IOpenable
 {
     private NetworkTableEntry heartbeat;
 
-    private boolean stop;
+    private volatile boolean stop;
 
+    private volatile boolean isConnected;
     private int currentValue;
 
     public HeartbeatWriter()
     {
         this.stop = false;
+        this.isConnected = false;
         this.currentValue = 0;
     }
 
@@ -38,6 +40,11 @@ public class HeartbeatWriter implements Runnable, IOpenable
         }
     }
 
+    public boolean isConnected()
+    {
+        return this.isConnected;
+    }
+
     /**
      * Run the thread that captures frames and buffers the most recently retrieved frame so that an pipeline can use it.
      */
@@ -48,9 +55,14 @@ public class HeartbeatWriter implements Runnable, IOpenable
         {
             while (!this.stop)
             {
+                this.isConnected = NetworkTableHelper.isConnected();
                 this.currentValue = (this.currentValue + 1) % 10000;
 
-                this.heartbeat.setDouble(this.currentValue);
+                if (!this.heartbeat.setDouble(this.currentValue))
+                {
+                    Logger.writeError(String.format("Cannot write heartbeat (%s) as double", this.heartbeat.getType()));
+                    Thread.sleep(10000);
+                }
 
                 Thread.sleep(20);
             }
